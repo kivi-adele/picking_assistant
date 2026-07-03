@@ -327,6 +327,93 @@ class _MyAppState extends State<MyApp> {
 /// 拣货扫码流程的三个阶段：先扫订单，校验通过后再扫设备，最后进入录像状态
 enum ScanStage { scanOrder, scanDevice, recording }
 
+class SettingsPage extends StatefulWidget {
+  const SettingsPage({super.key});
+
+  @override
+  State<SettingsPage> createState() => _SettingsPageState();
+}
+
+class _SettingsPageState extends State<SettingsPage> {
+  late TextEditingController _urlController;
+  late TextEditingController _tokenController;
+  bool _saved = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _urlController = TextEditingController(text: AppSettings.serverUrl);
+    _tokenController = TextEditingController(text: AppSettings.apiToken);
+  }
+
+  @override
+  void dispose() {
+    _urlController.dispose();
+    _tokenController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    final url = _urlController.text.trim();
+    final token = _tokenController.text.trim();
+    if (url.isEmpty || token.isEmpty) return;
+    await AppSettings.save(serverUrl: url, apiToken: token);
+    if (!mounted) return;
+    setState(() => _saved = true);
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted) setState(() => _saved = false);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('服务器设置')),
+      body: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Text('服务器地址'),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _urlController,
+              decoration: const InputDecoration(
+                hintText: 'http://192.168.2.178:8080',
+                border: OutlineInputBorder(),
+              ),
+              keyboardType: TextInputType.url,
+            ),
+            const SizedBox(height: 24),
+            const Text('API Token'),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _tokenController,
+              decoration: const InputDecoration(
+                hintText: 'anxin-pick-2026',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 32),
+            ElevatedButton(
+              onPressed: _save,
+              child: const Text('保存'),
+            ),
+            if (_saved) ...[
+              const SizedBox(height: 16),
+              const Text(
+                '✓ 已保存',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class ScanFlowPage extends StatefulWidget {
   const ScanFlowPage({Key? key}) : super(key: key);
 
